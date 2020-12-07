@@ -758,24 +758,22 @@ class StepperMotArray {
 
 
 StepperMotArray delta = StepperMotArray(2,3,4,5,6,7,8,9,14,15,16,17);
-int a;
-int b;
-int c;
+
 float R = 10;
 
-int move1;
-int move2;
-int move3;
-
 void setup() {
-  Serial.begin(115200);
+  
+  int a;
+  int b;
+  int c;
+  Serial.begin(9600);
   
   pinMode(18, INPUT);
   pinMode(19, INPUT);
   pinMode(20, INPUT);
   while(digitalRead(18) == 1 || digitalRead(19) == 1 || digitalRead(20) == 1)
   {
-    Serial.println("setup");
+   /* Serial.println("setup");*/
     a = digitalRead(18) * 32;
     b = digitalRead(19) * 32;
     c = digitalRead(20) * 32;
@@ -784,72 +782,54 @@ void setup() {
   delta.currentPos1 = 14260;
   delta.currentPos2 = 14260;
   delta.currentPos3 = 14260;
-  delay(1000);
-
+Serial.write("D\r\n");
 }
 
 
+String inData = "";
 
-int calculateHeight1(float angle, float radius, float height)
-{
-  height = height - 4;
-  angle = angle*2*M_PI/360;
-  float xp = cos(angle)*radius + cos(2.617993878)*2;
-  float yp = sin(angle)*radius + sin(2.617993878)*2;
-  float x1 = cos(2.617993878)*R;
-  float y1 = sin(2.617993878)*R;
-  float a = sqrt( ((x1-xp)*(x1-xp)) + ((y1-yp)*(y1-yp)) ); 
-  int out = (int) ((height + sqrt(400 - (a*a)))*2038/M_PI);
-  return out;
-}
+String heightAstr;
+String heightBstr;
+String heightCstr;
+int heightA;
+int heightB;
+int heightC;
 
-int calculateHeight2(float angle, float radius, float height)
-{
-  height = height - 4;
-  angle = angle*2*M_PI/360;
-  float xp = cos(angle)*radius + cos(4.7123889804)*2;
-  float yp = sin(angle)*radius + sin(4.7123889804)*2;
-  float x1 = cos(4.7123889804)*R;
-  float y1 = sin(4.7123889804)*R;
-  float a = sqrt( (x1-xp)*(x1-xp) + (y1-yp)*(y1-yp) ); 
-  int out = (int) ((height + sqrt(400 - (a*a)))*2038/M_PI);
-  return out;
-}
+char character;
 
-int calculateHeight3(float angle, float radius, float height)
-{
-  height = height - 4;
-  angle = angle*2*M_PI/360;
-  float xp = cos(angle)*radius + cos(0.5235987756)*2;
-  float yp = sin(angle)*radius + sin(0.5235987756)*2;
-  float x1 = cos(0.5235987756)*R;
-  float y1 = sin(0.5235987756)*R;
-  float a = sqrt( (x1-xp)*(x1-xp) + (y1-yp)*(y1-yp) ); 
-  int out = (int) ((height + sqrt(400 - (a*a)))*2038/M_PI);
-  return out;
-}
+int moveA;
+int moveB;
+int moveC;
 
 void loop() {
-    delay(1000);
-    move1 = delta.currentPos1 - calculateHeight1(150, 5, 5);
-    move2 = delta.currentPos2 - calculateHeight2(150, 5, 5);
-    move3 = delta.currentPos3 - calculateHeight3(150, 5, 5);
-    Serial.print("move1: ");
-    Serial.println(delta.currentPos1);
-    delta.wavestep(move1,move2,move3);
-    delay(1000);
-    move1 = delta.currentPos1 - calculateHeight1(270, 5, 5);
-    move2 = delta.currentPos2 - calculateHeight2(270, 5, 5);
-    move3 = delta.currentPos3 - calculateHeight3(270, 5, 5);
-    Serial.print("move2: ");
-    Serial.println(delta.currentPos1);
-    delta.wavestep(move1,move2,move3);
-    delay(1000);
-    move1 = delta.currentPos1 - calculateHeight1(30, 5, 5);
-    move2 = delta.currentPos2 - calculateHeight2(30, 5, 5);
-    move3 = delta.currentPos3 - calculateHeight3(30, 5, 5);
-    Serial.print("move3: ");
-    Serial.println(delta.currentPos1);
-    delta.wavestep(move1,move2,move3);
-    
+
+    while(!Serial.available())
+    {
+      
+    }
+    delay(50);
+    while(Serial.available())
+    {
+        character =  Serial.read();
+        inData = inData + character;
+    }
+    heightAstr = inData.substring(inData.indexOf("A") + 1, inData.indexOf("B"));
+    heightBstr = inData.substring(inData.indexOf("B") + 1, inData.indexOf("C"));
+    heightCstr = inData.substring(inData.indexOf("C") + 1);
+
+    heightA = heightAstr.toInt();
+    heightB = heightBstr.toInt();
+    heightC = heightCstr.toInt();
+
+
+    moveA = delta.currentPos1 - heightA;
+    moveB = delta.currentPos2 - heightB;
+    moveC = delta.currentPos3 - heightC;
+
+    delta.wavestep(moveA, moveB, moveC);
+
+    inData = "";
+    Serial.write("D\r\n");
+   
 }
+    
